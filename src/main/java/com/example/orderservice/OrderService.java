@@ -27,6 +27,10 @@ public class OrderService {
 		this.factory = factory;
 	}
 
+	public Order byId(Long id) {
+		return this.orderRepository.findOne(id);
+	}
+
 	public Order create(Date when) {
 		return this.orderRepository
 				.save(new Order(when, OrderStates.SUBMITTED));
@@ -55,18 +59,32 @@ public class OrderService {
 		return stateMachine;
 	}
 
+	/**
+	 * Why do we need this?
+	 *
+	 * @param orderId
+	 * @return
+	 */
 	private StateMachine<OrderStates, OrderEvents> build(Long orderId) {
-		Order order = this.orderRepository.findOne(orderId);
-		String orderIdKey = String.valueOf(order.getId());
+		Order order = this.orderRepository.findOne(orderId); // Retrieve orderId on DB
+		String orderIdKey = String.valueOf(order.getId()); // Convert the ID to String
 		StateMachine<OrderStates, OrderEvents> stateMachine =
-				this.factory.getStateMachine(orderIdKey);
+				this.factory.getStateMachine(orderIdKey); // Get the StateMachine with the specific ID
 
 		stateMachine.stop(); //stop state machine from running
 
+		/**
+		 * Validates the current state machine's state
+		 */
 		stateMachine.getStateMachineAccessor()
 				.doWithAllRegions(sma -> {
 
 					StateMachineInterceptor<OrderStates, OrderEvents> interceptor = null;
+
+					/**
+					 * Persists the state machine context into the Order entity itself
+					 * This makes them in-sync.
+					 */
 					sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<OrderStates, OrderEvents>() {
 
 						@Override
@@ -77,7 +95,7 @@ public class OrderService {
 										Long.class.cast(msg.getHeaders().getOrDefault(ORDER_ID_HEADER, -1L)))
 										.ifPresent(orderId -> {
 											Order order1 = orderRepository.findOne(orderId);
-											order1.setOrderState(state.getId());
+											order1.setOrderState(state.getId()); // This is the one responsible for changing the state
 											orderRepository.save(order1);
 
 										});
@@ -85,6 +103,7 @@ public class OrderService {
 						}
 					});
 
+					// This method I don't know...
 					sma.resetStateMachine(
 							new DefaultStateMachineContext<>(
 									order.getOrderStates(),
@@ -95,7 +114,7 @@ public class OrderService {
 					);
 				});
 
-		stateMachine.start();
+		stateMachine.start(); // start the state machine once again
 		return stateMachine;
 	}
 }

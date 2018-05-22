@@ -32,12 +32,17 @@ public class Runner implements ApplicationRunner {
 
 		StateMachine<OrderStates, OrderEvents> paymentStateMachine =
 				orderService.pay(order.getId(), UUID.randomUUID().toString());
+		log.info("[XXXX - Payment State Machine OBJECT] " + paymentStateMachine);
+		log.info("[XXXX - Payment State Machine EXTENDED STATE] " + paymentStateMachine.getExtendedState());
+		log.info("[XXXX - Payment State Machine INITIAL STATE] " + paymentStateMachine.getInitialState());
+
 		log.info("[XXXX - Payment State Machine] " + paymentStateMachine.getState().getId().name());
-//		log.info("[XXXX - Payment State Machine] " + paymentStateMachine.getState().getId().name());
+		log.info("[XXXX - Payment ORDER DB Entry] " + orderService.byId(order.getId()));
 
 		StateMachine<OrderStates, OrderEvents> fulfilledStateMachine =
 				orderService.fulfill(order.getId());
 		log.info("[XXXX - Fulfill State Machine] " + fulfilledStateMachine.getState().getId().name());
+		log.info("[XXXX - Fulfill ORDER DB Entry] " + orderService.byId(order.getId()));
 
 
 //		Long orderId = 666L;
