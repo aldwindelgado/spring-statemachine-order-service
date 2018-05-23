@@ -60,6 +60,14 @@ public class SimpleEnumStatemachineConfiguration extends StateMachineConfigurerA
 		states
 				.withStates()
 				.initial(OrderStates.SUBMITTED)
+				/**
+				 * Purpose of this 'stateEntry()' handler is to provide
+				 * some additional logic when a specific STATE is entered,
+				 * in this case, it is the 'SUBMITTED' state;
+				 *
+				 * Maybe you want to add a DB logic, do some notification stuff
+				 * or add some message to the message queue or whatever the hell you want;
+				 */
 //				.stateEntry(OrderStates.SUBMITTED, stateContext -> {
 //
 //					/**
